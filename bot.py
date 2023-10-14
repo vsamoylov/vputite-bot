@@ -98,6 +98,8 @@ async def main() -> None:
     ADMINS = await bot.get_chat_administrators(chat_id=CHAT_ID)
     admins_list = ""
     for x in ADMINS:
+        if admins_list != "":
+            admins_list += ", "
         admins_list += ("@" + x.user.username + " ")
 
     await bot.send_message(chat_id=CHAT_ID, text="I've started! :)\nAdministrators of the chat: " + admins_list)
