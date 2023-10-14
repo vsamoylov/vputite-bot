@@ -8,11 +8,13 @@ from aiogram import Bot, Dispatcher, Router, types, F
 from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart, Command
 from aiogram.types import Message
-from aiogram.utils.keyboard import InlineKeyboardBuilder
+from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 from aiogram.utils.markdown import hbold
 
 # Bot token can be obtained via https://t.me/BotFather
 TOKEN = getenv("TELEGRAM_TOKEN")      # Get your bot token using https://t.me/BotFather
+CHAT_ID = getenv("CHAT_ID") 
+CHANNEL_NAME = getenv("CHANNEL_NAME") 
 
 # All handlers should be attached to the Router (or Dispatcher)
 dp = Dispatcher()
@@ -32,7 +34,7 @@ async def command_start_handler(message: Message) -> None:
 
 @dp.message(Command("stop"))
 async def command_stop_handler(message: Message) -> None:
-    await message.answer(f"Buy, {hbold(message.from_user.full_name)}!")
+    await message.answer(f"Bye, {hbold(message.from_user.full_name)}!")
 
 @dp.message(Command("random"))
 async def command_random(message: types.Message):
@@ -41,9 +43,22 @@ async def command_random(message: types.Message):
     await message.answer("Нажмите на кнопку, чтобы бот отправил число от 1 до 10",
         reply_markup=builder.as_markup())
     
+    
 @dp.callback_query(F.data == "random_value")
 async def send_random_value(callback: types.CallbackQuery):
     await callback.message.answer(str(random.randint(1, 10)))
+
+# approved it the CHAT_ID
+@dp.callback_query(F.data == "callback_approve")
+async def forward_to_channel(callback: types.CallbackQuery):
+    callback.message.delete_reply_markup()
+    await callback.message.send_copy(chat_id=CHANNEL_NAME, reply_markup=None)
+
+# rejected in the CHAT_ID
+@dp.callback_query(F.data == "callback_reject")
+async def reject_suggestion(callback: types.CallbackQuery):
+    await callback.message.answer(str(random.randint(1, 10)))
+
 
 @dp.message()
 async def echo_handler(message: types.Message) -> None:
@@ -54,19 +69,22 @@ async def echo_handler(message: types.Message) -> None:
     """
     try:
         # Send a copy of the received message
-        await message.send_copy(chat_id=message.chat.id)
+
+        builder = InlineKeyboardBuilder()
+        #builder = ReplyKeyboardBuilder(one_time_keyboard=True)
+        builder.button(text="Подтвердить", callback_data="callback_approve")
+        builder.button(text="Отказать", callback_data="callback_reject")
+        await message.send_copy(chat_id=CHAT_ID, reply_markup=builder.as_markup())
 
         # markup = types.InlineKeyboardMarkup()
         # btn0 = types.InlineKeyboardButton(text='Подтвердить', callback_data="1")
         # markup.add(btn0)
 
-        builder = InlineKeyboardBuilder()
-
-        for index in range(1, 11):
-            builder.button(text=f"Set {index}", callback_data=f"set:{index}")
-        builder.adjust(3, 2)
-
-        await message.answer(f"Твой ID: {message.from_user.id}", reply_markup=builder.as_markup())
+        
+        #for index in range(1, 11):
+        #    builder.button(text=f"Set {index}", callback_data=f"set:{index}")
+        #builder.adjust(3, 2)
+        #await message.answer(f"Твой ID: {message.from_user.id}", reply_markup=builder.as_markup())
         # await message.answer("Some text here", reply_markup=builder.as_markup())
     except TypeError:
         # But not all the types is supported to be copied so need to handle it
