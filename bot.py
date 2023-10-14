@@ -94,6 +94,14 @@ async def echo_handler(message: types.Message) -> None:
 async def main() -> None:
     # Initialize Bot instance with a default parse mode which will be passed to all API calls
     bot = Bot(TOKEN, parse_mode=ParseMode.HTML)
+
+    ADMINS = await bot.get_chat_administrators(chat_id=CHAT_ID)
+    admins_list = ""
+    for x in ADMINS:
+        admins_list += ("@" + x.user.username + " ")
+
+    await bot.send_message(chat_id=CHAT_ID, text="I've started! :)\nAdministrators of the chat: " + admins_list)
+
     # And the run events dispatching
     await dp.start_polling(bot)
 
