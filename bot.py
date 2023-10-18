@@ -51,8 +51,9 @@ async def send_random_value(callback: types.CallbackQuery):
 # approved it the CHAT_ID
 @dp.callback_query(F.data == "callback_approve")
 async def forward_to_channel(callback: types.CallbackQuery):
-    callback.message.delete_reply_markup()
-    await callback.message.send_copy(chat_id=CHANNEL_NAME, reply_markup=None)
+    #callback.message.delete_reply_markup()
+    emptyBuilder = InlineKeyboardBuilder()
+    await callback.message.send_copy(chat_id=CHANNEL_NAME, reply_markup=emptyBuilder.as_markup())
 
 # rejected in the CHAT_ID
 @dp.callback_query(F.data == "callback_reject")
