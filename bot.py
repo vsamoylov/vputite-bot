@@ -3,6 +3,7 @@ import logging
 import sys
 from os import getenv
 import random
+from constants import *
 
 from aiogram import Bot, Dispatcher, Router, types, F
 from aiogram.enums import ParseMode
@@ -30,7 +31,7 @@ async def command_start_handler(message: Message) -> None:
     # and the target chat will be passed to :ref:`aiogram.methods.send_message.SendMessage`
     # method automatically or call API method directly via
     # Bot instance: `bot.send_message(chat_id=message.chat.id, ...)`
-    await message.answer(f"Hello, {hbold(message.from_user.full_name)}!")
+    await message.answer(TEXT_WELCOME + f", {hbold(message.from_user.full_name)}! " + TEXT_WELCOME_DESCRIPTION)
 
 @dp.message(Command("stop"))
 async def command_stop_handler(message: Message) -> None:
@@ -54,6 +55,7 @@ async def forward_to_channel(callback: types.CallbackQuery):
     #callback.message.delete_reply_markup()
     emptyBuilder = InlineKeyboardBuilder()
     await callback.message.send_copy(chat_id=CHANNEL_NAME, reply_markup=emptyBuilder.as_markup())
+    # await callback.message.answer(chat_id=CHANNEL_NAME, text=HTML_SUBSCRIBE_LINK, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
 
 # rejected in the CHAT_ID
 @dp.callback_query(F.data == "callback_reject")
@@ -73,8 +75,8 @@ async def echo_handler(message: types.Message) -> None:
 
         builder = InlineKeyboardBuilder()
         #builder = ReplyKeyboardBuilder(one_time_keyboard=True)
-        builder.button(text="Подтвердить", callback_data="callback_approve")
-        builder.button(text="Отказать", callback_data="callback_reject")
+        builder.button(text=TEXT_APPROVE, callback_data="callback_approve")
+        builder.button(text=TEXT_REJECT, callback_data="callback_reject")
         await message.send_copy(chat_id=CHAT_ID, reply_markup=builder.as_markup())
 
         # markup = types.InlineKeyboardMarkup()
