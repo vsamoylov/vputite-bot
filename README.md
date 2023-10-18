@@ -32,6 +32,7 @@ To setup a bot for your own usage, you should specify those variables in
 # Bot Data
 TOKEN = # your bot's token
 CHAT_ID = # chat id where the bot will forward users' messages
+CHANNEL_NAME = # name of the channel to publish suggested post
 
 
 To change default text to your custom, redefine values of the dictionary for each phrase in 
