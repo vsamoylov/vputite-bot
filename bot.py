@@ -3,6 +3,7 @@ import logging
 import sys
 from os import getenv
 import random
+from constants import strings
 
 from aiogram import Bot, Dispatcher, Router, types, F
 from aiogram.enums import ParseMode
@@ -73,8 +74,8 @@ async def echo_handler(message: types.Message) -> None:
 
         builder = InlineKeyboardBuilder()
         #builder = ReplyKeyboardBuilder(one_time_keyboard=True)
-        builder.button(text="Подтвердить", callback_data="callback_approve")
-        builder.button(text="Отказать", callback_data="callback_reject")
+        builder.button(text=strings.APPROVE, callback_data="callback_approve")
+        builder.button(text=strings.REJECT, callback_data="callback_reject")
         await message.send_copy(chat_id=CHAT_ID, reply_markup=builder.as_markup())
 
         # markup = types.InlineKeyboardMarkup()
