@@ -55,6 +55,7 @@ async def forward_to_channel(callback: types.CallbackQuery):
     #callback.message.delete_reply_markup()
     emptyBuilder = InlineKeyboardBuilder()
     await callback.message.send_copy(chat_id=CHANNEL_NAME, reply_markup=emptyBuilder.as_markup())
+    # await callback.message.answer(chat_id=CHANNEL_NAME, text=HTML_SUBSCRIBE_LINK, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
 
 # rejected in the CHAT_ID
 @dp.callback_query(F.data == "callback_reject")
