@@ -55,6 +55,13 @@ async def send_random_value(callback: types.CallbackQuery):
 async def forward_to_channel(callback: types.CallbackQuery):
     global bot
     # callback.message.delete_reply_markup(callback.inline_message_id)
+
+    await callback.answer("userID: " + str(callback.message.from_user.id) + " caption: " + callback.message.caption + " chat_name: " + callback.message.chat.title + " from: " + callback.message.from_user.first_name + " msg ID: " + str(callback.message.message_id))
+    await bot.edit_message_caption(chat_id=callback.message.chat.id, message_id=callback.message.message_id, caption = 'Edited caption')
+    
+#    user_ID = callback.message.from_user.id
+#    await bot.send_message(chat_id=user_ID, text=TEXT_APPROVE_CONFIRMATION)
+
     emptyBuilder = InlineKeyboardBuilder()
     await callback.message.send_copy(chat_id=CHANNEL_NAME, reply_markup=emptyBuilder.as_markup())
     await bot.send_message(chat_id=CHAT_ID, text=TEXT_APPROVE_CONFIRMATION)
