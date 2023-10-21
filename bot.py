@@ -8,6 +8,7 @@ from constants import *
 from aiogram import Bot, Dispatcher, Router, types, F
 from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart, Command
+from aiogram.filters.callback_data import CallbackData
 from aiogram.types import Message
 from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 from aiogram.utils.markdown import hbold
@@ -20,8 +21,12 @@ CHANNEL_NAME = getenv("CHANNEL_NAME")
 # All handlers should be attached to the Router (or Dispatcher)
 dp = Dispatcher()
 bot = None
-builder = InlineKeyboardBuilder()
-messages = []
+
+class VptCallbackData(CallbackData, prefix="vpt"):
+    action: str
+    message_id: int
+    chat_id: int
+
 
 @dp.message(CommandStart())
 async def command_start_handler(message: Message) -> None:
@@ -46,85 +51,43 @@ async def command_help_handler(message: Message) -> None:
 async def command_stop_handler(message: Message) -> None:
     await message.answer(f"Bye, {hbold(message.from_user.full_name)}!")
 
-@dp.message(Command("random"))
-async def command_random(message: types.Message):
-    builder = InlineKeyboardBuilder()
-    builder.add(types.InlineKeyboardButton(text="Нажми меня", callback_data="random_value"))
-    await message.answer("Нажмите на кнопку, чтобы бот отправил число от 1 до 10",
-        reply_markup=builder.as_markup())
-    
-    
-@dp.callback_query(F.data == "random_value")
-async def send_random_value(callback: types.CallbackQuery):
-    await callback.message.answer(str(random.randint(1, 10)))
 
-# approved it the CHAT_ID
-@dp.callback_query(F.data == "callback_addlinks")
-async def add_links(callback: types.CallbackQuery):
-    global builder
-    await bot.edit_message_caption(chat_id=callback.message.chat.id, message_id=callback.message.message_id, caption = callback.message.caption + "\n\n" + HTML_INFO, reply_markup=builder.as_markup())
-
-
-# approved it the CHAT_ID
-@dp.callback_query(F.data == "callback_approve")
-async def forward_to_channel(callback: types.CallbackQuery):
+# approved in the CHAT_ID
+@dp.callback_query(VptCallbackData.filter(F.action == "callback_approve"))
+async def approve_suggestion(callback: types.CallbackQuery, callback_data: VptCallbackData):
     global bot
+    logging.debug(callback)
 
     await callback.answer("caption: " + callback.message.caption + " chat_name: " + callback.message.chat.title + " from: " + callback.message.from_user.first_name + " msg ID: " + str(callback.message.message_id))
     await bot.edit_message_reply_markup(chat_id=callback.message.chat.id, message_id=callback.message.message_id, reply_markup=None)
 
-    emptyBuilder = InlineKeyboardBuilder()
-#    await callback.message.send_copy(chat_id=CHANNEL_NAME, reply_markup=emptyBuilder.as_markup())
-
     await bot.copy_message(chat_id=CHANNEL_NAME, from_chat_id=callback.message.chat.id, message_id=callback.message.message_id, reply_markup=None)
-#    await bot.send_message(chat_id=CHANNEL_NAME, text=HTML_INFO, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
-    await send_admin_approve(callback)
+    await bot.send_message(chat_id=callback_data.chat_id, reply_to_message_id=callback_data.message_id, text=TEXT_ADMIN_APPROVE_CONFIRMATION )
 
 
 # rejected in the CHAT_ID
-@dp.callback_query(F.data == "callback_reject")
-async def reject_suggestion(callback: types.CallbackQuery):
-    await callback.answer("caption: " + callback.message.caption + " chat_name: " + callback.message.chat.title + " from: " + callback.message.from_user.first_name + " msg ID: " + str(callback.message.message_id))
+@dp.callback_query(VptCallbackData.filter(F.action == "callback_reject"))
+async def reject_suggestion(callback: types.CallbackQuery, callback_data: VptCallbackData):
     await bot.edit_message_reply_markup(chat_id=callback.message.chat.id, message_id=callback.message.message_id, reply_markup=None)
-    await send_admin_reject(callback)
+    await bot.send_message(chat_id=callback_data.chat_id, reply_to_message_id=callback_data.message_id, text=TEXT_ADMIN_REJECT_CONFIRMATION )
 
-
-
-async def send_admin_approve(callback: types.CallbackQuery):
-    global messages
-
-    await bot.edit_message_caption(chat_id=callback.message.chat.id, message_id=callback.message.message_id, caption = callback.message.caption + "\n\n" + TEXT_ADMIN_APPROVE_CONFIRMATION)
-    for x in messages:
-        if (x[0] == callback.message.message_id):
-            await x[1].reply(TEXT_ADMIN_APPROVE_CONFIRMATION)
-            messages.remove(x)
-            break
-
-async def send_admin_reject(callback: types.CallbackQuery):    
-    global messages
-    await bot.edit_message_caption(chat_id=callback.message.chat.id, message_id=callback.message.message_id, caption = callback.message.caption + "\n\n" + TEXT_ADMIN_REJECT_CONFIRMATION)
-    for x in messages:
-        if (x[0] == callback.message.message_id):
-            await x[1].reply(TEXT_ADMIN_REJECT_CONFIRMATION)
-            messages.remove(x)
-            break
 
 @dp.message()
 async def echo_handler(message: types.Message) -> None:
-    """
-    Handler will forward receive a message back to the sender
-
-    By default, message handler will handle all message types (like a text, photo, sticker etc.)
-    """
     try:
         global builder
-        global messages
 
         if (message.caption and message.photo):
             # Send a copy of the received message
+            builder = InlineKeyboardBuilder()
+    
+            logging.debug("Message from echo_handler() function:")
+            logging.debug(message)
+            builder.button(text=TEXT_APPROVE, callback_data=VptCallbackData(action="callback_approve", message_id=message.message_id, chat_id=message.chat.id).pack())
+            builder.button(text=TEXT_REJECT, callback_data=VptCallbackData(action="callback_reject", message_id=message.message_id, chat_id=message.chat.id).pack())
+
             copy = await message.send_copy(chat_id=CHAT_ID, reply_markup=builder.as_markup())
-            # await message.answer(TEXT_SUBMIT_CONFIRMATION)
-            messages.append([copy.message_id, message])
+            await bot.edit_message_caption(chat_id=copy.chat.id, message_id=copy.message_id, caption = copy.caption + "\n\n" + HTML_INFO, reply_markup=builder.as_markup())
         else: 
             await message.answer(TEXT_SUBMIT_RULES)
 
@@ -147,15 +110,11 @@ async def main() -> None:
 
     await bot.send_message(chat_id=CHAT_ID, text="I've started! :)\nAdministrators of the chat: " + admins_list)
 
-    global builder
-    builder.button(text=TEXT_APPROVE, callback_data="callback_approve")
-    builder.button(text=TEXT_REJECT, callback_data="callback_reject")
-    builder.button(text=TEXT_LINKS, callback_data="callback_addlinks")
-
     # And the run events dispatching
     await dp.start_polling(bot)
 
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, stream=sys.stdout)
+    #logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
     asyncio.run(main())
