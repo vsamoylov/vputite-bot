@@ -8,7 +8,7 @@ from create_bot import dp, bot
 from aiogram import Bot, Dispatcher, Router, types, F
 from aiogram.filters import CommandStart, Command
 from aiogram.filters.callback_data import CallbackData
-from aiogram.types import Message
+from aiogram.types import Message, BotCommand
 from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 from aiogram.utils.markdown import hbold
 
@@ -86,10 +86,17 @@ async def echo_handler(message: types.Message) -> None:
         # But not all the types is supported to be copied so need to handle it
         await message.answer(TEXT_SUBMIT_ERROR)
 
+async def set_default_commands(dp):
+    await bot.set_my_commands([
+        types.BotCommand(command="/start", description="Запустить бота"),
+        types.BotCommand(command="/help", description="Помощь"),
+    ])
 
 async def main() -> None:
     # Initialize Bot instance with a default parse mode which will be passed to all API calls
     # And the run events dispatching
+    await set_default_commands(bot)
+    
     ADMINS = await bot.get_chat_administrators(chat_id=CHAT_ID)
     admins_list = ""
     for x in ADMINS:
