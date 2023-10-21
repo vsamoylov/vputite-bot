@@ -92,7 +92,6 @@ async def reject_suggestion(callback: types.CallbackQuery):
 
 async def send_admin_approve(callback: types.CallbackQuery):
     global messages
-    print (callback.message, callback.message.message_id, callback.message.from_user, callback.message.sender_chat, callback.message.via_bot, callback.message.chat.id)
 
     await bot.edit_message_caption(chat_id=callback.message.chat.id, message_id=callback.message.message_id, caption = callback.message.caption + "\n\n" + TEXT_ADMIN_APPROVE_CONFIRMATION)
     for x in messages:
@@ -121,7 +120,6 @@ async def echo_handler(message: types.Message) -> None:
         global builder
         global messages
 
-        print (message)
         if (message.caption and message.photo):
             # Send a copy of the received message
             copy = await message.send_copy(chat_id=CHAT_ID, reply_markup=builder.as_markup())
