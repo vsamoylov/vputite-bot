@@ -113,25 +113,18 @@ async def echo_handler(message: types.Message) -> None:
     By default, message handler will handle all message types (like a text, photo, sticker etc.)
     """
     try:
-        # Send a copy of the received message
-        # builder = InlineKeyboardBuilder()
         global builder
 
-        await message.send_copy(chat_id=CHAT_ID, reply_markup=builder.as_markup())
+        if (message.caption and message.photo):
+            # Send a copy of the received message
+            await message.send_copy(chat_id=CHAT_ID, reply_markup=builder.as_markup())
+            await message.answer(TEXT_SUBMIT_CONFIRMATION)
+        else: 
+            await message.answer(TEXT_SUBMIT_RULES)
 
-        # markup = types.InlineKeyboardMarkup()
-        # btn0 = types.InlineKeyboardButton(text='Подтвердить', callback_data="1")
-        # markup.add(btn0)
-
-        
-        #for index in range(1, 11):
-        #    builder.button(text=f"Set {index}", callback_data=f"set:{index}")
-        #builder.adjust(3, 2)
-        #await message.answer(f"Твой ID: {message.from_user.id}", reply_markup=builder.as_markup())
-        # await message.answer("Some text here", reply_markup=builder.as_markup())
     except TypeError:
         # But not all the types is supported to be copied so need to handle it
-        await message.answer("Nice try!")
+        await message.answer(TEXT_SUBMIT_ERROR)
 
 
 async def main() -> None:
