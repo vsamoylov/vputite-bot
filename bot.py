@@ -86,7 +86,7 @@ async def echo_handler(message: types.Message) -> None:
         # But not all the types is supported to be copied so need to handle it
         await message.answer(TEXT_SUBMIT_ERROR)
 
-async def set_default_commands(dp):
+async def set_default_commands(bot):
     await bot.set_my_commands([
         types.BotCommand(command="/start", description="Запустить бота"),
         types.BotCommand(command="/help", description="Помощь"),
