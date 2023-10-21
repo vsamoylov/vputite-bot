@@ -1,3 +1,7 @@
+from config import *
+import random
+from create_bot import bot
+
 TEXT_APPROVE = "Подтвердить"
 TEXT_REJECT = "Отказать"
 TEXT_LINKS = "+ ссылки"
@@ -17,6 +21,24 @@ TEXT_ADMIN_REJECT_CONFIRMATION = "Отклонено администратор�
 TEXT_ADMIN_APPROVE_CONFIRMATION = "Одобрено администратором"
 TEXT_SUBSCRIBE = "Подписаться на канал"
 TEXT_SENDINFO = "Прислать информацию"
-HTML_SUBSCRIBE_LINK = "<a href='https://t.me/+asHAHC92HK0wYzIy'>Подписаться на канал</a>"   # parse_mode = ParseMode.HTML
+
+LINK_TO_CHANNEL="https://t.me/" + CHANNEL_NAME.replace("@", "")
+# LINK_TO_SUBSCRIBE="https://t.me/" + CHANNEL_NAME.replace("@", "")
+HTML_SUBSCRIBE_LINK = "<a href='" + LINK_TO_CHANNEL + "'>Подписаться на канал</a>"   # parse_mode = ParseMode.HTML
+# TODO: get it dynamic
 HTML_SENDINFO_LINK = "<a href='https://t.me/vputite_reportbot'>Прислать информацию</a>" # parse_mode = ParseMode.HTML
 HTML_INFO = HTML_SUBSCRIBE_LINK + "\n" + HTML_SENDINFO_LINK # parse_mode = ParseMode.HTML
+
+def getValue(v):
+        if type(v) == type(list()):
+                print("This is a list of {} items!".format(len(v)))
+        
+                r_idx=random.randint(0, len(v)-1)
+                print(r_idx)
+                return v[r_idx]
+
+        if isinstance(v, str):
+                print("This is a string!")
+                return v
+
+        return str(v)

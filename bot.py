@@ -1,26 +1,17 @@
 import asyncio
 import logging
 import sys
-from os import getenv
-import random
 from constants import *
+from config import *
+from create_bot import dp, bot
 
 from aiogram import Bot, Dispatcher, Router, types, F
-from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart, Command
 from aiogram.filters.callback_data import CallbackData
 from aiogram.types import Message
 from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 from aiogram.utils.markdown import hbold
 
-# Bot token can be obtained via https://t.me/BotFather
-TOKEN = getenv("TELEGRAM_TOKEN")      # Get your bot token using https://t.me/BotFather
-CHAT_ID = getenv("CHAT_ID") 
-CHANNEL_NAME = getenv("CHANNEL_NAME") 
-
-# All handlers should be attached to the Router (or Dispatcher)
-dp = Dispatcher()
-bot = None
 
 class VptCallbackData(CallbackData, prefix="vpt"):
     action: str
@@ -98,9 +89,7 @@ async def echo_handler(message: types.Message) -> None:
 
 async def main() -> None:
     # Initialize Bot instance with a default parse mode which will be passed to all API calls
-    global bot
-    bot = Bot(TOKEN, parse_mode=ParseMode.HTML)
-
+    # And the run events dispatching
     ADMINS = await bot.get_chat_administrators(chat_id=CHAT_ID)
     admins_list = ""
     for x in ADMINS:
@@ -110,7 +99,6 @@ async def main() -> None:
 
     await bot.send_message(chat_id=CHAT_ID, text="I've started! :)\nAdministrators of the chat: " + admins_list)
 
-    # And the run events dispatching
     await dp.start_polling(bot)
 
 
