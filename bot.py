@@ -21,7 +21,7 @@ CHANNEL_NAME = getenv("CHANNEL_NAME")
 dp = Dispatcher()
 bot = None
 builder = InlineKeyboardBuilder()
-
+messages = []
 
 @dp.message(CommandStart())
 async def command_start_handler(message: Message) -> None:
@@ -69,13 +69,9 @@ async def add_links(callback: types.CallbackQuery):
 @dp.callback_query(F.data == "callback_approve")
 async def forward_to_channel(callback: types.CallbackQuery):
     global bot
-    # callback.message.delete_reply_markup(callback.inline_message_id)
 
     await callback.answer("caption: " + callback.message.caption + " chat_name: " + callback.message.chat.title + " from: " + callback.message.from_user.first_name + " msg ID: " + str(callback.message.message_id))
     await bot.edit_message_reply_markup(chat_id=callback.message.chat.id, message_id=callback.message.message_id, reply_markup=None)
-
-#    user_ID = callback.message.from_user.id
-#    await bot.send_message(chat_id=user_ID, text=TEXT_APPROVE_CONFIRMATION)
 
     emptyBuilder = InlineKeyboardBuilder()
 #    await callback.message.send_copy(chat_id=CHANNEL_NAME, reply_markup=emptyBuilder.as_markup())
@@ -83,9 +79,6 @@ async def forward_to_channel(callback: types.CallbackQuery):
     await bot.copy_message(chat_id=CHANNEL_NAME, from_chat_id=callback.message.chat.id, message_id=callback.message.message_id, reply_markup=None)
 #    await bot.send_message(chat_id=CHANNEL_NAME, text=HTML_INFO, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
     await send_admin_approve(callback)
-
-
-
 
 
 # rejected in the CHAT_ID
@@ -97,13 +90,25 @@ async def reject_suggestion(callback: types.CallbackQuery):
 
 
 
-async def send_admin_approve(callback: types.CallbackQuery):    
+async def send_admin_approve(callback: types.CallbackQuery):
+    global messages
+    print (callback.message, callback.message.message_id, callback.message.from_user, callback.message.sender_chat, callback.message.via_bot, callback.message.chat.id)
+
     await bot.edit_message_caption(chat_id=callback.message.chat.id, message_id=callback.message.message_id, caption = callback.message.caption + "\n\n" + TEXT_ADMIN_APPROVE_CONFIRMATION)
-#    await callback.edit_message_caption(chat_id=callback.message.chat.id, message_id=callback.message.message_id, caption = TEXT_ADMIN_APPROVE_CONFIRMATION)
+    for x in messages:
+        if (x[0] == callback.message.message_id):
+            await x[1].reply(TEXT_ADMIN_APPROVE_CONFIRMATION)
+            messages.remove(x)
+            break
 
 async def send_admin_reject(callback: types.CallbackQuery):    
+    global messages
     await bot.edit_message_caption(chat_id=callback.message.chat.id, message_id=callback.message.message_id, caption = callback.message.caption + "\n\n" + TEXT_ADMIN_REJECT_CONFIRMATION)
-#    await callback.message.reply(TEXT_ADMIN_REJECT_CONFIRMATION)
+    for x in messages:
+        if (x[0] == callback.message.message_id):
+            await x[1].reply(TEXT_ADMIN_REJECT_CONFIRMATION)
+            messages.remove(x)
+            break
 
 @dp.message()
 async def echo_handler(message: types.Message) -> None:
@@ -114,11 +119,14 @@ async def echo_handler(message: types.Message) -> None:
     """
     try:
         global builder
+        global messages
 
+        print (message)
         if (message.caption and message.photo):
             # Send a copy of the received message
-            await message.send_copy(chat_id=CHAT_ID, reply_markup=builder.as_markup())
-            await message.answer(TEXT_SUBMIT_CONFIRMATION)
+            copy = await message.send_copy(chat_id=CHAT_ID, reply_markup=builder.as_markup())
+            # await message.answer(TEXT_SUBMIT_CONFIRMATION)
+            messages.append([copy.message_id, message])
         else: 
             await message.answer(TEXT_SUBMIT_RULES)
 
