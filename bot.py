@@ -12,10 +12,8 @@ from aiogram.types import Message, BotCommand
 from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 from aiogram.utils.markdown import hbold
 
-import os
-from aiogram.types import InputFile
 from aiogram.types import FSInputFile
-
+from aiogram.utils.media_group import MediaGroupBuilder
 
 class VptCallbackData(CallbackData, prefix="vpt"):
     action: str
@@ -43,9 +41,8 @@ async def command_help_handler(message: Message) -> None:
     await message.answer(TEXT_HELP)
 
     # Path to the local photo file
-    photo_moto = FSInputFile("help_photo.png")
-    await bot.send_photo(message.chat.id, photo_moto)
-
+    help_photo = FSInputFile("help_photo.png")
+    await bot.send_photo(message.chat.id, help_photo)
 
 
 @dp.message(Command("stop"))
@@ -91,26 +88,39 @@ async def echo_handler(message: types.Message) -> None:
             builder.button(text=TEXT_APPROVE, callback_data=VptCallbackData(action="callback_approve", message_id=message.message_id, chat_id=message.chat.id).pack())
             builder.button(text=TEXT_REJECT, callback_data=VptCallbackData(action="callback_reject", message_id=message.message_id, chat_id=message.chat.id).pack())
 
-            if (message.caption and message.photo):
-                copy = await message.send_copy(chat_id=CHAT_ID, reply_markup=builder.as_markup())
-                new_caption = ""
-                if (copy.caption):
-                    new_caption = copy.caption
-                await bot.edit_message_caption(chat_id=copy.chat.id, message_id=copy.message_id, caption = new_caption + "\n\n" + HTML_INFO, reply_markup=builder.as_markup())
-                return
-            if (message.caption and message.video):
-                file_id = message.video.file_id
-                #media = InputMediaVideo(media=file_id)
-                copy = await bot.send_video(chat_id=CHAT_ID, video=file_id, caption=message.caption, reply_markup=builder.as_markup())
-                new_caption = ""
-                if (copy.caption):
-                    new_caption = copy.caption
-                await bot.edit_message_caption(chat_id=copy.chat.id, message_id=copy.message_id, caption = new_caption + "\n\n" + HTML_INFO, reply_markup=builder.as_markup())
-                return
+            if (message.photo):
+                if (message.caption):
+                    copy = await message.send_copy(chat_id=CHAT_ID, reply_markup=builder.as_markup())
+                    new_caption = ""
+                    if (copy.caption):
+                        new_caption = copy.caption
+                    await bot.edit_message_caption(chat_id=copy.chat.id, message_id=copy.message_id, caption = new_caption + "\n\n" + HTML_INFO, reply_markup=builder.as_markup())
+                    return
+                else: 
+                    await message.answer(TEXT_SUBMIT_RULES_PHOTO)   
+                    return
+            if (message.video):
+                if (message.caption):
+                    file_id = message.video.file_id
+                    #media = InputMediaVideo(media=file_id)
+                    copy = await bot.send_video(chat_id=CHAT_ID, video=file_id, caption=message.caption, reply_markup=builder.as_markup())
+                    new_caption = ""
+                    if (copy.caption):
+                        new_caption = copy.caption
+                    await bot.edit_message_caption(chat_id=copy.chat.id, message_id=copy.message_id, caption = new_caption + "\n\n" + HTML_INFO, reply_markup=builder.as_markup())
+                    return
+                else:    
+                    await message.answer(TEXT_SUBMIT_RULES_VIDEO)   
+                    return
             await message.answer(TEXT_SUBMIT_RULES)
         else: 
-            await message.answer(TEXT_SUBMIT_RULES)
+            #media_group = MediaGroupBuilder(caption="Media group caption")
+            #media_group.add_photo(media=FSInputFile("help_photo.png"))
+            #media_group.add_photo(media=FSInputFile("help_photo.png"))
+            #await bot.send_media_group(chat_id = CHAT_ID, media=media_group.build())
 
+            await message.answer(TEXT_SUBMIT_RULES_GROUP)
+            
     except TypeError:
         # But not all the types is supported to be copied so need to handle it
         await message.answer(TEXT_SUBMIT_ERROR)
@@ -124,6 +134,7 @@ async def set_default_commands(dp):
 async def main() -> None:
     # Initialize Bot instance with a default parse mode which will be passed to all API calls
     # And the run events dispatching
+    #await bot.set_my_description(TEXT_BOT_DESCRIPTION)
     await set_default_commands(bot)
     
     info = await bot.get_me()
