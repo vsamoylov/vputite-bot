@@ -15,6 +15,10 @@ from aiogram.utils.markdown import hbold
 from aiogram.types import FSInputFile
 from aiogram.utils.media_group import MediaGroupBuilder
 
+
+process_media_group = None
+media_group = None
+
 class VptCallbackData(CallbackData, prefix="vpt"):
     action: str
     message_id: int
@@ -119,7 +123,29 @@ async def echo_handler(message: types.Message) -> None:
             #media_group.add_photo(media=FSInputFile("help_photo.png"))
             #await bot.send_media_group(chat_id = CHAT_ID, media=media_group.build())
 
-            await message.answer(TEXT_SUBMIT_RULES_GROUP)
+            global process_media_group
+            global media_group
+            if (process_media_group == None):
+                logging.debug("check None")
+                logging.debug(process_media_group)
+                logging.debug(message.media_group_id)
+                media_group = MediaGroupBuilder(caption="Media group caption")
+                process_media_group = message.media_group_id
+                await message.answer(TEXT_SUBMIT_RULES_GROUP)
+            if (process_media_group == message.media_group_id):
+                logging.debug("check add photo")
+                logging.debug(process_media_group)
+                logging.debug(message.media_group_id)                
+                media_group.add_photo(media=message.photo[0].file_id)
+            else:
+                logging.debug("check send media group")
+                logging.debug(process_media_group)
+                logging.debug(message.media_group_id)                
+                process_media_group = message.media_group_id
+                media_group = MediaGroupBuilder(caption="Media group caption")
+                await message.answer(TEXT_SUBMIT_RULES_GROUP)   
+                # await bot.send_media_group(chat_id = CHAT_ID, media=media_group.build())
+       
             
     except TypeError:
         # But not all the types is supported to be copied so need to handle it
