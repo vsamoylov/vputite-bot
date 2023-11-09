@@ -94,7 +94,7 @@ async def echo_handler(message: types.Message) -> None:
                 if (message.from_user.first_name):
                     name = name + str(message.from_user.first_name)
                 if (message.from_user.last_name):
-                    name = name + str(message.from_user.last_name)
+                    name = name + " " + str(message.from_user.last_name)
                 builder.button(text='от: ' + name, url='tg://user?id='+str(message.from_user.id))
 
             builder.adjust(2, 1)
