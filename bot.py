@@ -56,7 +56,7 @@ async def approve_suggestion(callback: types.CallbackQuery, callback_data: VptCa
     global bot
     logging.debug(callback)
 
-    await callback.answer("user ID: " + str(callback.message.from_user.id) +"caption: " + callback.message.caption + " chat_name: " + callback.message.chat.title + " from: " + callback.message.from_user.first_name + " msg ID: " + str(callback.message.message_id))
+    #await callback.answer("user ID: " + str(callback.message.from_user.id) +"caption: " + callback.message.caption + " chat_name: " + callback.message.chat.title + " from: " + callback.message.from_user.first_name + " msg ID: " + str(callback.message.message_id))
     await bot.edit_message_reply_markup(chat_id=callback.message.chat.id, message_id=callback.message.message_id, reply_markup=None)
 
     await bot.copy_message(chat_id=CHANNEL_NAME, from_chat_id=callback.message.chat.id, message_id=callback.message.message_id, reply_markup=None)
@@ -87,6 +87,17 @@ async def echo_handler(message: types.Message) -> None:
             logging.debug(message)
             builder.button(text=TEXT_APPROVE, callback_data=VptCallbackData(action="callback_approve", message_id=message.message_id, chat_id=message.chat.id).pack())
             builder.button(text=TEXT_REJECT, callback_data=VptCallbackData(action="callback_reject", message_id=message.message_id, chat_id=message.chat.id).pack())
+            if message.from_user.username is not None:
+                builder.button(text='от: ' + str(message.from_user.username), url='tg://user?id='+str(message.from_user.id))
+            else:
+                name = ""
+                if (message.from_user.first_name):
+                    name = name + str(message.from_user.first_name)
+                if (message.from_user.last_name):
+                    name = name + str(message.from_user.last_name)
+                builder.button(text='от: ' + name, url='tg://user?id='+str(message.from_user.id))
+
+            builder.adjust(2, 1)
 
             if (message.photo):
                 if (message.caption):
