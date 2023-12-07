@@ -86,8 +86,8 @@ async def reject_suggestion(callback: types.CallbackQuery, callback_data: VptCal
     await bot.edit_message_caption(chat_id=callback.message.chat.id, message_id=callback.message.message_id, caption = callback.message.caption + new_caption, parse_mode='html')
 
 def is_reporter_user(user_id):
-    # katya_lz
-    return user_id == 5557567931
+    # sofia_zyk
+    return user_id == 352795306
 
 @dp.message()
 async def echo_handler(message: types.Message) -> None:
