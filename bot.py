@@ -20,6 +20,7 @@ class VptCallbackData(CallbackData, prefix="vpt"):
     message_id: int
     chat_id: int
 
+bot_name = ""
 
 @dp.message(CommandStart())
 async def command_start_handler(message: Message) -> None:
@@ -73,6 +74,7 @@ async def reject_suggestion(callback: types.CallbackQuery, callback_data: VptCal
 
 @dp.message()
 async def echo_handler(message: types.Message) -> None:
+    links = "<a href='https://t.me/" + CHANNEL_NAME.replace("@", "") + "'>" + TEXT_SUBSCRIBE + "</a>\n" + "<a href='https://t.me/" + bot_name + "'>" + TEXT_SENDINFO + "</a>"	
     try:
         global builder
         logging.debug(message)
@@ -105,7 +107,7 @@ async def echo_handler(message: types.Message) -> None:
                     new_caption = ""
                     if (copy.caption):
                         new_caption = copy.caption
-                    await bot.edit_message_caption(chat_id=copy.chat.id, message_id=copy.message_id, caption = new_caption + "\n\n" + HTML_INFO, reply_markup=builder.as_markup())
+                    await bot.edit_message_caption(chat_id=copy.chat.id, message_id=copy.message_id, caption = new_caption + "\n\n" + links, reply_markup=builder.as_markup())
                     return
                 else: 
                     await message.answer(TEXT_SUBMIT_RULES_PHOTO)   
@@ -118,7 +120,7 @@ async def echo_handler(message: types.Message) -> None:
                     new_caption = ""
                     if (copy.caption):
                         new_caption = copy.caption
-                    await bot.edit_message_caption(chat_id=copy.chat.id, message_id=copy.message_id, caption = new_caption + "\n\n" + HTML_INFO, reply_markup=builder.as_markup())
+                    await bot.edit_message_caption(chat_id=copy.chat.id, message_id=copy.message_id, caption = new_caption + "\n\n" + links, reply_markup=builder.as_markup())
                     return
                 else:    
                     await message.answer(TEXT_SUBMIT_RULES_VIDEO)   
@@ -148,9 +150,10 @@ async def main() -> None:
     #await bot.set_my_description(TEXT_BOT_DESCRIPTION)
     await set_default_commands(bot)
     
-    info = await bot.get_me()
-    name = info.username
-    print(name)
+    global bot_name	
+    bot_info = await bot.get_me()
+    bot_name = bot_info.username
+    logging.debug(bot_name)
 
     ADMINS = await bot.get_chat_administrators(chat_id=CHAT_ID)
     admins_list = ""
