@@ -140,6 +140,7 @@ async def echo_handler(message: types.Message) -> None:
                     new_caption = ""
                     if (copy.caption):
                         new_caption = copy.caption
+
                     if (is_reporter_user(message.from_user.id)):
                         #logging.debug("reporter user: " + message.from_user.username)
                         new_caption = new_caption + '\n\n прислано: ' + '<a href="tg://user?id=' + str(message.from_user.id) + '">' + message.from_user.username + '</a>'
@@ -177,17 +178,13 @@ async def main() -> None:
     bot_info = await bot.get_me()
     bot_name = bot_info.username
     logging.debug(bot_name)
-    try:
-        ADMINS = await bot.get_chat_administrators(chat_id=CHAT_ID)
-        admins_list = ""
-        for x in ADMINS:
-            if admins_list != "":
-                admins_list += ", "
-            admins_list += ("@" + x.user.username + " ")
-
-    except Exception as e:
-        logging.debug("Telegram bad request (bot is not a chat member/admin)")
-        logging.exception(f"Error: {e}")
+    
+    ADMINS = await bot.get_chat_administrators(chat_id=CHAT_ID)
+    admins_list = ""
+    for x in ADMINS:
+        if admins_list != "":
+            admins_list += ", "
+        admins_list += ("@" + x.user.username + " ")
 
     await bot.send_message(chat_id=CHAT_ID, text="I've started! :)\nAdministrators of the chat: " + admins_list)
     await dp.start_polling(bot)
