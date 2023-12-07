@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import sys
+from os import getenv, environ
 from constants import *
 from config import *
 from create_bot import dp, bot
@@ -20,6 +21,7 @@ class VptCallbackData(CallbackData, prefix="vpt"):
     chat_id: int
 
 bot_name = ""
+AUTHORS = ""
 
 @dp.message(CommandStart())
 async def command_start_handler(message: Message) -> None:
@@ -86,12 +88,9 @@ async def reject_suggestion(callback: types.CallbackQuery, callback_data: VptCal
     await bot.edit_message_caption(chat_id=callback.message.chat.id, message_id=callback.message.message_id, caption = callback.message.caption + new_caption, parse_mode='html')
 
 def is_reporter_user(user_id):
-    # katya_lz, sofia_zyk
-    ids = [ 5557567931, 352795306 ]
-    if (user_id in ids):
-        return True
-    else:
-        return False
+    logging.debug("is_reporter_user: " + str(user_id))
+    logging.debug("AUTHORS: " + str(AUTHORS))
+    return (str(user_id) in AUTHORS)
 
 @dp.message()
 async def echo_handler(message: types.Message) -> None:
@@ -114,16 +113,21 @@ async def echo_handler(message: types.Message) -> None:
                     username = message.from_user.username or ""
                     first_name = message.from_user.first_name or ""
                     last_name = message.from_user.last_name or ""
-                    from_user_counter = "прислано от: " + "<a href='tg://user?id=" + str(message.from_user.id) + "'>" + "userID: " + str(message.from_user.id) + ", username: " + username + ", name: " + first_name + " " + last_name + "</a>" + ", дата: " + message.date.strftime('%d-%m-%Y')
+                    from_user_counter = "прислано от: " + "<a href='tg://user?id=" + str(message.from_user.id) + "'>" + "userID: " + str(message.from_user.id) + ", username: " + username + ", name: " + first_name + " " + last_name + "</a>" 
+                    logging.debug("from_user_counter:" + from_user_counter)
                     await bot.send_message(chat_id=CHAT_ID, text = from_user_counter)
+                    logging.debug("message sent")
 
                     copy = await message.send_copy(chat_id=CHAT_ID, reply_markup=builder.as_markup())
+                    logging.debug("copy message sent")
+
                     new_caption = ""
                     if (copy.caption):
                         new_caption = copy.caption
                  
+                    logging.debug("check the author (id): " + str(message.from_user.id))                 
                     if (is_reporter_user(message.from_user.id)):
-                        #logging.debug("reporter user: " + message.from_user.username)
+                        logging.debug("reporter user (username): " + message.from_user.username)
                         new_caption = new_caption + '\n\n прислано: ' + '<a href="tg://user?id=' + str(message.from_user.id) + '">' + message.from_user.username + '</a>'
 
                     await bot.edit_message_caption(chat_id=copy.chat.id, message_id=copy.message_id, caption = new_caption + "\n\n" + links, reply_markup=builder.as_markup())
@@ -162,8 +166,9 @@ async def echo_handler(message: types.Message) -> None:
 
             await message.answer(TEXT_SUBMIT_RULES_GROUP)
             
-    except TypeError:
+    except TypeError as e:
         # But not all the types is supported to be copied so need to handle it
+        logging.ERROR("Failed to send message: %s ", e)
         await message.answer(TEXT_SUBMIT_ERROR)
 
 async def set_default_commands(dp):
@@ -190,7 +195,18 @@ async def main() -> None:
             admins_list += ", "
         admins_list += ("@" + x.user.username + " ")
 
-    await bot.send_message(chat_id=CHAT_ID, text="I've started! :)\nAdministrators of the chat: " + admins_list)
+
+    GREETING_MESSAGE="I've started! :)\n"
+    GREETING_MESSAGE += "Administrators of the chat: " + admins_list 
+
+    global AUTHORS
+    if "AUTHORS" in environ:
+        AUTHORS=getenv("AUTHORS").split(",")
+        GREETING_MESSAGE += "\nList of Authors:" 
+        for author in AUTHORS:
+            GREETING_MESSAGE += " " + author
+
+    await bot.send_message(chat_id=CHAT_ID, text=GREETING_MESSAGE)
     await dp.start_polling(bot)
 
 
