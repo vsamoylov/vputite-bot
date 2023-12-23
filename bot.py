@@ -1,19 +1,19 @@
 import asyncio
-import logging
 import sys
-from os import getenv, environ
-from constants import *
-from config import *
-from create_bot import dp, bot
+from os import environ
 
-from aiogram import Bot, Dispatcher, Router, types, F
+from aiogram import types, F
 from aiogram.filters import CommandStart, Command
 from aiogram.filters.callback_data import CallbackData
-from aiogram.types import Message, BotCommand
-from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
-from aiogram.utils.markdown import hbold
 from aiogram.types import FSInputFile
-from aiogram.utils.media_group import MediaGroupBuilder
+from aiogram.types import Message
+from aiogram.utils.keyboard import InlineKeyboardBuilder
+from aiogram.utils.markdown import hbold
+
+from config import *
+from constants import *
+from create_bot import dp
+
 
 class VptCallbackData(CallbackData, prefix="vpt"):
     action: str
@@ -51,13 +51,10 @@ async def command_help_handler(message: Message) -> None:
 async def command_stop_handler(message: Message) -> None:
     await message.answer(f"Bye, {hbold(message.from_user.full_name)}!")
 
-
-
 # approved in the CHAT_ID
 @dp.callback_query(VptCallbackData.filter(F.action == "callback_approve"))
 async def approve_suggestion(callback: types.CallbackQuery, callback_data: VptCallbackData):
     global bot
-    #logging.debug(callback)
 
     #await callback.answer("user ID: " + str(callback.message.from_user.id) +"caption: " + callback.message.caption + " chat_name: " + callback.message.chat.title + " from: " + callback.message.from_user.first_name + " msg ID: " + str(callback.message.message_id))
     await bot.edit_message_reply_markup(chat_id=callback.message.chat.id, message_id=callback.message.message_id, reply_markup=None)
@@ -71,8 +68,6 @@ async def approve_suggestion(callback: types.CallbackQuery, callback_data: VptCa
     else:
         new_caption = new_caption + callback.from_user.first_name + " " + callback.from_user.last_name 
     await bot.edit_message_caption(chat_id=callback.message.chat.id, message_id=callback.message.message_id, caption = callback.message.caption + new_caption, parse_mode='html')
-
-
 
 # rejected in the CHAT_ID
 @dp.callback_query(VptCallbackData.filter(F.action == "callback_reject"))
@@ -150,7 +145,6 @@ async def echo_handler(message: types.Message) -> None:
                         new_caption = copy.caption
 
                     if (is_reporter_user(message.from_user.id)):
-                        #logging.debug("reporter user: " + message.from_user.username)
                         new_caption = new_caption + '\n\n прислано: ' + '<a href="tg://user?id=' + str(message.from_user.id) + '">' + message.from_user.username + '</a>'
                     await bot.edit_message_caption(chat_id=copy.chat.id, message_id=copy.message_id, caption = new_caption + "\n\n" + links, reply_markup=builder.as_markup())
                     return
@@ -158,12 +152,7 @@ async def echo_handler(message: types.Message) -> None:
                     await message.answer(TEXT_SUBMIT_RULES_VIDEO)   
                     return
             await message.answer(TEXT_SUBMIT_RULES)
-        else: 
-            #media_group = MediaGroupBuilder(caption="Media group caption")
-            #media_group.add_photo(media=FSInputFile("help_photo.png"))
-            #media_group.add_photo(media=FSInputFile("help_photo.png"))
-            #await bot.send_media_group(chat_id = CHAT_ID, media=media_group.build())
-
+        else:
             await message.answer(TEXT_SUBMIT_RULES_GROUP)
             
     except TypeError as e:
@@ -195,9 +184,7 @@ async def main() -> None:
             admins_list += ", "
         admins_list += ("@" + x.user.username + " ")
 
-
-    GREETING_MESSAGE="I've started! :)\n"
-    GREETING_MESSAGE += "Administrators of the chat: " + admins_list 
+    GREETING_MESSAGE = "I've started! :)\nAdministrators of the chat: " + admins_list
 
     global AUTHORS
     if "AUTHORS" in environ:
